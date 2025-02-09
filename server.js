@@ -1,15 +1,21 @@
 const express = require("express");
 const axios = require("axios");
 const cors = require("cors");
+require("dotenv").config(); // Load environment variables from .env file
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const API_KEY = process.env.GEMINI_API_KEY; // Read API key from environment variable
+
+if (!API_KEY) {
+    console.error("❌ Missing GEMINI_API_KEY in environment variables!");
+    process.exit(1); // Exit if API key is not found
+}
+
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
 app.use(express.json());
 app.use(cors({ origin: '*' }));
-
-const API_KEY = "AIzaSyDOk7gML8Bv8athGvOCEvXiUqhyfEer4CM"; // Move to environment variables
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
 
 app.post("/fetch-exercise-plan", async (req, res) => {
     try {
@@ -53,7 +59,6 @@ Complete Diet Plan:
 -Saturday
 -Sunday
 
-
 Pre-Workout Meal:
 - [meal item]
 - [meal item]
@@ -64,20 +69,14 @@ Post-Workout Meal:
 
 Keep formatting consistent. Use exact headers as shown. No asterisks or markdown.`;
 
-        
-
         const requestBody = {
             contents: [{
-                parts: [{
-                    text: prompt
-                }]
+                parts: [{ text: prompt }]
             }]
         };
 
         const response = await axios.post(GEMINI_API_URL, requestBody, {
-            headers: { 
-                "Content-Type": "application/json"
-            }
+            headers: { "Content-Type": "application/json" }
         });
 
         const exercisePlan = response.data.candidates[0].content.parts[0].text;
@@ -93,5 +92,5 @@ Keep formatting consistent. Use exact headers as shown. No asterisks or markdown
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`✅ Server running on http://localhost:${PORT}`);
 });
